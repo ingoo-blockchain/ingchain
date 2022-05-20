@@ -1,29 +1,15 @@
-const express = require('express')
-const app = express()
+const rpc = require('node-json-rpc')
 
-app.use(express.urlencoded({extended:true,}))
-app.get('/',(req,res)=>{
-    res.send('RPC')
-})
+const option = {
+    port:3456,
+    host:'127.0.0.1',
+    path:'/',
+    strict:false,
+}
 
-//GET getBlock
-app.get('/getBlock',(req,res)=>{
-    res.send('getBlock')
-})
-//GET mineBlock
-app.get('/mineBlock',(req,res)=>{
-    res.send('mineBlock')
-})
-//GET peers
-app.get('/peers',(req,res)=>{
-    res.send('peers')
-})
-//POST addPeer
-app.post('/addPeer',(req,res)=>{
-    res.send('addPeer')
+const rpcServer = rpc.Server(option)
+
+rpcServer.addMethod('shutdown', (param, callback) => {
+    console.log('shutdown을 요청받았다~')
 })
 
-
-app.listen(3000,()=>{
-    console.log('Server Start')
-})

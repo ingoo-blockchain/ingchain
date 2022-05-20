@@ -5,6 +5,10 @@ class BlockChain{
         this.blocks = [ Block.genesis() ]
     }
 
+    getBlocks(){
+        return this.blocks
+    }
+
     lastBlock(){
         const { length } = this.blocks
         return this.blocks[length-1]

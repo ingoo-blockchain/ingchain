@@ -1,15 +1,26 @@
 const WebSocket = require('ws')
+const { createAction, stringToJson } = require('../src/utils/socketUtils')
+const BlockChain = require('./block/blockchain')
 const P2P_PORT = process.env.P2P_PORT || 7545
-class P2pServer {
-    constructor(_port = P2P_PORT) {
+const messageType = require('./utils/message')
+
+
+class P2pServer{
+    constructor(_blockchain, _port = P2P_PORT) {
+        this.blockchain = _blockchain
         this.port = _port
         this.sockets = []
     }
 
+    getSockets(){ return this.sockets }
+
     listen() {
         const { port } = this
         const server = new WebSocket.Server({ port })
-        server.on('connection', socket => this.connectsocket(socket))
+        server.on('connection', socket => {
+            console.log(`socket connected`)
+            this.connectsocket(socket) 
+        })
         return port
     }
 
@@ -19,19 +30,45 @@ class P2pServer {
     }
 
     messageHandler(socket) {
-        socket.on('message', data => {
-            const message = JSON.parse(Buffer.from(data).toString())
-            console.log(this.port,message)
-            switch(message.type){
-                case 'sample':
-                    socket.send(JSON.stringify({name:'ingoo'}))
-                break
-            }
-        })
+        const callback = data => {
+            const message = stringToJson(data)
+            if ( message === null ) return
+            const send = this.send(socket)
+            switch (message.type) {
+                case messageType.latest_block:
+                    console.log(this.port, message.data)
+                    send(messageType.all_blocks,[this.blockchain.lastBlock()])
+                break;
+                case messageType.all_blocks:
+                    console.log(this.port, message.data)
+                    send(messageType.response_block,this.blockchain.blocks)
+                break;
+                case messageType.response_block:
+                    const receivedBlocks = message.data
+                    console.log(this.port, receivedBlocks)
+                break;
+                case "ingoo":
+                    console.log(this.port, message.data)
+                break;
+            }   
+        }
+        socket.on('message', callback)
     }
 
-    getSockets() {
-        return this.sockets
+    send(socket) { 
+        return function(type,data){
+            socket.send( createAction(type,data) )
+        }
+    }
+
+    broadcast(type,data){
+        const ws = this.getSockets()
+        ws.forEach( socket => { socket.send( createAction(type,data) ) })
+    }
+
+    // 설정 - 나중에
+    connectToPeers(){
+
     }
 
     // 단일
@@ -41,11 +78,9 @@ class P2pServer {
         socket.on('error', ()=>{ console.log('소켓 연결 실패') })
     }
 
-    // 설정 - 나중에
-    connectToPeers(){
+    handleBlockChain(){
 
     }
-
 }
 
 module.exports = P2pServer

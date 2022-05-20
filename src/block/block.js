@@ -18,7 +18,7 @@ class Block {
         const _index = 0
         const _previousHash = '0'.repeat(64)
         const _timestamp = 1652500215
-        const _data = 'new gensisblock'
+        const _data = '"The Times 03/Jan/2009 Chancellor on brink of second bailout for banks"'
         const _hash = this.calculateHash(_index,_previousHash,_timestamp,_data)
         return new this(_index, _previousHash, _timestamp, _data, _hash)
     }
